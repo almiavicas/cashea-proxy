@@ -10,13 +10,6 @@ a él en vez de directamente a `external.cashea.app`.
 Tu backend → https://cashea-proxy.example.com → EC2 (nginx) → https://external.cashea.app
 ```
 
-## Por qué un repo aparte
-
-Se despliega a una EC2 vía `git pull` + `docker compose`, no junto con el pipeline de
-build/deploy de la aplicación principal. Es una unidad de infraestructura de un solo
-propósito, con su propio ciclo de vida - no depende del pipeline de tests/deploy del
-backend ni lo afecta.
-
 ## Requisitos previos (una sola vez)
 
 1. Lanzar una EC2 Ubuntu 24.04 (`t4g.nano` alcanza).
