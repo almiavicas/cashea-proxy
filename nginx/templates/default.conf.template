@@ -1,0 +1,38 @@
+server {
+    listen 80;
+    server_name ${DOMAIN};
+
+    # Necesario para que certbot pueda validar el dominio (challenge HTTP-01).
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl;
+    server_name ${DOMAIN};
+
+    ssl_certificate     /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
+
+    location / {
+        # Solo Django deberia poder usar este proxy - sin el secreto correcto, 403.
+        # Evita que el proxy quede como un relay abierto hacia la API de Cashea.
+        if ($http_x_proxy_secret != "${PROXY_SECRET}") {
+            return 403;
+        }
+
+        proxy_pass https://${UPSTREAM_HOST};
+        proxy_ssl_server_name on;
+        proxy_set_header Host ${UPSTREAM_HOST};
+        # No reenviar el secreto hacia Cashea, es solo para autenticar contra este proxy.
+        proxy_set_header X-Proxy-Secret "";
+
+        proxy_connect_timeout 10s;
+        proxy_read_timeout 30s;
+    }
+}
